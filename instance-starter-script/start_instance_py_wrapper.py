@@ -8,6 +8,7 @@ start_cmd = "aws ec2 run-instances --image-id ami-5ec1673e --count 1" + \
 
 process = subprocess.run([start_cmd], stdout=subprocess.PIPE, shell=True)
 output = process.stdout
+print(output)
 output = json.loads(output.decode("utf-8"))
 
 instanceID = output['Instances'][0]['InstanceId']
