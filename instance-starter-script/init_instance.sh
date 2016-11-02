@@ -40,3 +40,16 @@ sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /hom
 service httpd start
 EOT0
 
+
+cat > /home/ec2-user/strange-references/deploy.sh << 'EOT1'
+#!/bin/bash
+cd /home/ec2-user
+wget github.com/ryantantiern/strange-references/archive/login-template.zip
+unzip login-template.zip
+rm login-template.zip
+mv strange-references-login-template/ strange-references
+chmod 755 `find . -type d`
+chmod 644 `find . -type f`
+EOT1
+
+

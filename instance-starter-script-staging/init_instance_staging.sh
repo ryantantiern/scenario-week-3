@@ -39,6 +39,7 @@ service httpd start
 EOT0
 
 cat > /home/ec2-user/strange-references/deploy.sh << 'EOT1'
+#!/bin/bash
 cd /home/ec2-user
 wget github.com/ryantantiern/strange-references/archive/login-template.zip
 unzip login-template.zip
