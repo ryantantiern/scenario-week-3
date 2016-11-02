@@ -1,10 +1,33 @@
 #!/bin/bash
 
 yum -y update
-yum install -y python35 postgresql
-pip install -U pip setuptools django
+yum install -y postgresql
+yum install -y httpd24 mod24_wsgi-python27
+
+python -m pip install -U pip setuptools
+python -m pip install django
+
+DJANGO_CONF=\
+"WSGIScriptAlias / /home/ec2-user/strange-references/strange_references_project/wsgi.py
+WSGIDaemonProcess strange-references python-path=/home/ec2-user/strange-references:/usr/local/lib/python2.7/site-packages
+WSGIProcessGroup strange-references
+<Directory /home/ec2-user/strange-references/strange_references_project>
+<Files wsgi.py>
+Require all granted
+</Files>
+</Directory>"
+
+printf "$DJANGO_CONF" > /etc/httpd/conf.d/django.conf
 
 cd /home/ec2-user
-aws s3 cp s3://aws-codedeploy-us-west-2/latest/install . --region us-west-2
-chmod +x ./install
-./install auto
+wget github.com/ryantantiern/strange-references/archive/login-template.zip
+unzip login-template.zip
+rm login-template.zip
+mv strange-references-login-template/ strange-references
+chmod 755 `find . -type d`
+chmod 644 `find . -type f`
+
+PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
+sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \[ '$PUBLIC_DNS' \]/g" ./strange-references/strange_references_project/settings.py
+
+service httpd start
