@@ -24,6 +24,7 @@ def log(message):
 
 # Call AWS CLI to retrieve current AWS public DNS address.
 # Result stored in public_dns_str.
+log("Contacting AWS...")
 AWS_GET_PUBLICDNS = 'aws ec2 describe-instances --filters "Name=instance-state-name,Values=running,Name=tag:Name,Values=%s" --query "Reservations[].Instances[].PublicDnsName"' % AWS_INSTANCE_NAME
 
 aws_instances_result = subprocess.check_output(AWS_GET_PUBLICDNS, shell = True)
@@ -32,10 +33,11 @@ public_dns_str = parsed_json[0]
 
 # For debug:
 #print aws_instances_result
-log("There are %s DNS entries." % len(parsed_json))
-log(public_dns_str)
+log("DNS entry retrieved: %s." % public_dns_str)
 
 # Connect to Github API
+
+log("Contacting GitHub...")
 
 # Get list of existing hooks
 req = urllib2.Request(GITHUB_WEBHOOKS_API)
@@ -44,14 +46,27 @@ generate_auth(req)
 hooks_response = urllib2.urlopen(req).read()
 hooks = json.loads(hooks_response)
 
-# For debug:
-#log(hooks_response)
-
 log("There are %d hooks registered." % len(hooks))
 
-#for hook in hooks:
-#    log(hook.id, hook.name)
+# Go through list of hooks and remove if already existing.
+for hook in hooks:
+    hook_id = hook['id']
+    hook_name = hook['name']
+    if hook_name == 'web':
+        hook_url = hook['config']['url']
+        log("ID: " + str(hook_id) + " URL: " + hook_url)
+        
+        if hook_url == public_dns_str:
+            log("Note: Webhook already exists. Removing...")
+            
+            del_req = urllib2.Request(GITHUB_WEBHOOKS_API + "/" + str(hook_id))
+            generate_auth(del_req)
+            del_req.get_method = lambda: 'DELETE'
+            del_response = urllib2.urlopen(del_req)
+            
+            log("Webhook removed.")
 
+# Prepare new webhook
 params = {
     "name": "web",
     "active": True,
@@ -65,12 +80,11 @@ params = {
     }
 }
 
+# Prepare POST request.
 data = json.dumps(params)
-#print(data)
 request = urllib2.Request(GITHUB_WEBHOOKS_API, data)
 request.add_header('Content-Type', 'application/json')
 generate_auth(request)
-#response = urllib2.urlopen(request).read()
 log("Attempting to register webhook.")
 try:
     response = urllib2.urlopen(request).read()
@@ -79,4 +93,3 @@ except urllib2.HTTPError as e:
     log("ERROR: An error occurred - see response:")
     error_message = e.read()
     log(error_message)
-#print(response)
