@@ -3,6 +3,7 @@
 
 import subprocess
 import json
+import time
 import urllib2, base64
 
 # Config
@@ -17,6 +18,9 @@ GITHUB_WEBHOOKS_API = "https://api.github.com/repos/%s/%s/hooks" % (GITHUB_USERN
 def generate_auth(request):
     base64string = base64.b64encode('%s:%s' % (GITHUB_USERNAME, GITHUB_TOKEN))
     request.add_header("Authorization", "Basic %s" % base64string)
+    
+def log(message):
+    print "[%s] %s" % (time.ctime(), message)
 
 # Call AWS CLI to retrieve current AWS public DNS address.
 # Result stored in public_dns_str.
@@ -28,30 +32,51 @@ public_dns_str = parsed_json[0]
 
 # For debug:
 #print aws_instances_result
-print("There are %s entries." % len(parsed_json))
-print(public_dns_str)
+log("There are %s DNS entries." % len(parsed_json))
+log(public_dns_str)
 
 # Connect to Github API
+
+# Get list of existing hooks
+req = urllib2.Request(GITHUB_WEBHOOKS_API)
+req.add_header('Content-Type', 'application/json')
+generate_auth(req)
+hooks_response = urllib2.urlopen(req).read()
+hooks = json.loads(hooks_response)
+
+# For debug:
+#log(hooks_response)
+
+log("There are %d hooks registered." % len(hooks))
+
+#for hook in hooks:
+#    log(hook.id, hook.name)
+
 params = {
     "name": "web",
-    "active": "true",
+    "active": True,
     "events": [
         "push"
     ],
     "config": {
-        "url": "http://randy.com/webhooks",
+        "url": public_dns_str,
         "content_type": "json",
         "secret": WEBHOOK_SECRET
     }
 }
 
 data = json.dumps(params)
-print data
+#print(data)
 request = urllib2.Request(GITHUB_WEBHOOKS_API, data)
 request.add_header('Content-Type', 'application/json')
 generate_auth(request)
+#response = urllib2.urlopen(request).read()
+log("Attempting to register webhook.")
 try:
     response = urllib2.urlopen(request).read()
-except Exception:
-    print "error ocurred"
-print(response)
+    log("Webhook successfully registered.")
+except urllib2.HTTPError as e:
+    log("ERROR: An error occurred - see response:")
+    error_message = e.read()
+    log(error_message)
+#print(response)
