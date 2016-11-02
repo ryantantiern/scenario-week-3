@@ -1,9 +1,12 @@
 #!/usr/bin/python
+# Github listener server for integration with Github webhooks.
+# Executes deployment script when event is dispatched from Github.
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import json
 import time
 import subprocess
 
+# Config
 PORT_NUMBER = 8080
 SIGNATURE = "sha1=a6fb4ebd52c81ca1da3336b952d468448932f01c"
 DEPLOYMENT_SCRIPT_LOCATION = "~/strange-references/deploy.sh"
