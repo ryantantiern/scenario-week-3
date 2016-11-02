@@ -15,7 +15,7 @@ print(json.dumps(output, indent=2))
 instanceID = output['Instances'][0]['InstanceId']
 
 # Change the following to change the name or other tags
-tags = 'Key=Name,Value=StrangeProd'
+tags = 'Key=Name,Value=StrangeStaging'
 label_cmd = 'aws ec2 create-tags --resources ' + instanceID + \
 	' --tags ' + tags
 

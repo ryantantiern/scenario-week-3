@@ -27,8 +27,6 @@ mv strange-references-login-template/ strange-references
 chmod 755 `find . -type d`
 chmod 644 `find . -type f`
 
-sed -i "s/DEBUG = True/DEBUG = False/g" /home/ec2-user/strange-references/strange_references_project/settings.py
-
 FIRST_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
 sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$FIRST_PUBLIC_DNS' \]/g" /home/ec2-user/strange-references/strange_references_project/settings.py
 
@@ -39,4 +37,14 @@ NEW_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname
 sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /home/ec2-user/strange-references/strange_references_project/settings.py
 service httpd start
 EOT0
+
+cat > /home/ec2-user/strange-references/deploy.sh << 'EOT1'
+cd /home/ec2-user
+wget github.com/ryantantiern/strange-references/archive/login-template.zip
+unzip login-template.zip
+rm login-template.zip
+mv strange-references-login-template/ strange-references
+chmod 755 `find . -type d`
+chmod 644 `find . -type f`
+EOT1
 
