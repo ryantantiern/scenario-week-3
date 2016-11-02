@@ -10,9 +10,11 @@ import urllib2, base64
 AWS_INSTANCE_NAME = "ScenarioStaging"
 GITHUB_TOKEN = "b9501e841e0c37fe7a56c96cfedef07938ece540"
 GITHUB_USERNAME = "ryantantiern"
-GITHUB_REPO = "scenario-week-3"
+GITHUB_REPO = "strange-references"
 WEBHOOK_SECRET = "strange1"
+LISTENER_LOCATION = ":8080"
 GITHUB_WEBHOOKS_API = "https://api.github.com/repos/%s/%s/hooks" % (GITHUB_USERNAME, GITHUB_REPO)
+REMOVE_ALL_EXISTING_WEBHOOKS = True
 
 # Utility Functions
 def generate_auth(request):
@@ -36,7 +38,6 @@ public_dns_str = parsed_json[0]
 log("DNS entry retrieved: %s." % public_dns_str)
 
 # Connect to Github API
-
 log("Contacting GitHub...")
 
 # Get list of existing hooks
@@ -56,15 +57,19 @@ for hook in hooks:
         hook_url = hook['config']['url']
         log("ID: " + str(hook_id) + " URL: " + hook_url)
         
-        if hook_url == public_dns_str:
-            log("Note: Webhook already exists. Removing...")
+        remove = False
+        
+        if hook_url == public_dns_str or REMOVE_ALL_EXISTING_WEBHOOKS:
+            remove = True
             
+        if remove:
+            log("Note: Webhook already exists. Removing...")
             del_req = urllib2.Request(GITHUB_WEBHOOKS_API + "/" + str(hook_id))
             generate_auth(del_req)
             del_req.get_method = lambda: 'DELETE'
             del_response = urllib2.urlopen(del_req)
             
-            log("Webhook removed.")
+            log("Webhook %d removed." % hook_id)
 
 # Prepare new webhook
 params = {
@@ -74,7 +79,7 @@ params = {
         "push"
     ],
     "config": {
-        "url": public_dns_str,
+        "url": public_dns_str + LISTENER_LOCATION,
         "content_type": "json",
         "secret": WEBHOOK_SECRET
     }
