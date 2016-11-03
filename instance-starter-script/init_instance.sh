@@ -20,106 +20,25 @@ Require all granted
 
 printf "$DJANGO_CONF" > /etc/httpd/conf.d/django.conf
 
-# Make deploy script and run it
-cat > /home/ec2-user/deploy.sh << 'EOT0'
-#!/bin/bash
+# Pull all deployment scripts from Github and run deploy.sh
 cd /home/ec2-user
-curl -L -u blzq-mu:3669b531d5d5ae756280723fd071e0a1640db581 \
-https://github.com/ryantantiern/strange-references/archive/hooklistener.zip \
-> strange-references.zip
-unzip strange-references.zip
-rm strange-references.zip
-mv strange-references-hooklistener/ strange-references/
+curl -L -u ryantantiern:b9501e841e0c37fe7a56c96cfedef07938ece540 \
+https://github.com/ryantantiern/scenario-week-3/archive/deployment-scripts-ray.zip \
+> deployment-scripts.zip
+unzip deployment-scripts.zip
+rm deployment-scripts.zip
+mv scenario-week-3-deployment-scripts-ray/ deployment-scripts/
 
 chmod 755 `find . -type d`
 chmod 644 `find . -type f`
-EOT0
 
-chmod +x /home/ec2-user/deploy.sh
+cd /home/ec2-user/deployment-scripts
 
-source /home/ec2-user/deploy.sh
-
-
-# Update DEBUG setting in settings.py
-sed -i "s/DEBUG = True/DEBUG = False/g" /home/ec2-user/strange-references/strange_references_project/settings.py
-
+source instance-starter-script/deploy.sh
 
 # Make Python script for GitHub webhook
-cat > /home/ec2-user/webhook.py << 'EOT1'
-#!/usr/bin/env python
-# This script retrieves the current AWS public DNS address via the AWS CLI and communicates with GitHub to set up webhooks.
-import subprocess
-import json
-import time
-import urllib2, base64
-
-# Config
-AWS_INSTANCE_NAME = "ScenarioStaging"
-GITHUB_TOKEN = "b9501e841e0c37fe7a56c96cfedef07938ece540"
-GITHUB_USERNAME = "ryantantiern"
-GITHUB_REPO = "strange-references"
-WEBHOOK_SECRET = "strange1"
-LISTENER_LOCATION = "/hook"
-GITHUB_WEBHOOKS_API = "https://api.github.com/repos/%s/%s/hooks" % (GITHUB_USERNAME, GITHUB_REPO)
-REMOVE_ALL_EXISTING_WEBHOOKS = True
-
-# Utility Functions
-def generate_auth(request):
-    base64string = base64.b64encode('%s:%s' % (GITHUB_USERNAME, GITHUB_TOKEN))
-    request.add_header("Authorization", "Basic %s" % base64string)
-
-# Get public dns
-public_dns_str = urllib2.urlopen("http://169.254.169.254/latest/meta-data/public-hostname").read()
-
-# Get list of existing hooks
-req = urllib2.Request(GITHUB_WEBHOOKS_API)
-req.add_header('Content-Type', 'application/json')
-generate_auth(req)
-hooks_response = urllib2.urlopen(req).read()
-hooks = json.loads(hooks_response)
-
-# Go through list of hooks and remove if already existing
-for hook in hooks:
-    hook_id = hook['id']
-    hook_name = hook['name']
-    if hook_name == 'web':
-        hook_url = hook['config']['url']
-        
-        remove = False
-        
-        if hook_url == public_dns_str or REMOVE_ALL_EXISTING_WEBHOOKS:
-            remove = True
-            
-        if remove:
-            del_req = urllib2.Request(GITHUB_WEBHOOKS_API + "/" + str(hook_id))
-            generate_auth(del_req)
-            del_req.get_method = lambda: 'DELETE'
-            del_response = urllib2.urlopen(del_req)
-            
-# Prepare new webhook
-params = {
-    "name": "web",
-    "active": True,
-    "events": [
-        "push"
-    ],
-    "config": {
-        "url": public_dns_str + LISTENER_LOCATION,
-        "content_type": "json",
-        "secret": WEBHOOK_SECRET
-    }
-}
-
-# Prepare POST request.
-data = json.dumps(params)
-request = urllib2.Request(GITHUB_WEBHOOKS_API, data)
-request.add_header('Content-Type', 'application/json')
-generate_auth(request)
-try:
-    response = urllib2.urlopen(request).read()
-except urllib2.HTTPError as e:
-    error_message = e.read()
-EOT1
+source github-listener/update_webhooks.py
+source github-listener/server.py
 
 
 # Add startup script to update dns, update webhook, and start apache
