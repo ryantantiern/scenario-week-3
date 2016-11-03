@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # This script retrieves the current AWS public DNS address via the AWS CLI and communicates with GitHub to set up webhooks.
 
 import subprocess

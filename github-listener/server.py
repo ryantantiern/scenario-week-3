@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # Github listener server for integration with Github webhooks.
 # Executes deployment script when event is dispatched from Github.
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
