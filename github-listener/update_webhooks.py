@@ -73,7 +73,7 @@ for hook in hooks:
         
         remove = False
         
-        if hook_url == public_dns_str or REMOVE_ALL_EXISTING_WEBHOOKS:
+        if hook_url.find(public_dns_str) > -1 or REMOVE_ALL_EXISTING_WEBHOOKS:
             remove = True
             
         if remove:
@@ -93,7 +93,7 @@ params = {
         "push"
     ],
     "config": {
-        "url": public_dns_str + LISTENER_LOCATION,
+        "url": "http://" + public_dns_str + LISTENER_LOCATION,
         "content_type": "json",
         "secret": WEBHOOK_SECRET
     }
