@@ -20,7 +20,7 @@ AWS_INSTANCE_NAME = "ScenarioStaging"
 AWS_HOSTNAME_ENDPOINT = "http://169.254.169.254/latest/meta-data/public-hostname"
 
 # Github-Listener Config
-LISTENER_LOCATION = ":8080"  # The location where github-listener is running. Port 8080.
+LISTENER_LOCATION = "/hook"  # The location where github-listener is running. Port 8080.
 
 # Preferences
 REMOVE_ALL_EXISTING_WEBHOOKS = True
