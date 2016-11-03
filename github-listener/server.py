@@ -5,10 +5,11 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import json
 import time
 import subprocess
+import hmac, hashlib
 
 # Config
 PORT_NUMBER = 8080
-SIGNATURE = "sha1=a6fb4ebd52c81ca1da3336b952d468448932f01c"
+SECRET = "strange1"
 DEPLOYMENT_SCRIPT_LOCATION = "~/strange-references/deploy.sh"
 
 class requestHandler(BaseHTTPRequestHandler):
@@ -36,16 +37,18 @@ class requestHandler(BaseHTTPRequestHandler):
         log("Github event received: %s." % githubEvent)
         log("Github signature: %s." % githubSignature)
         
+        content = self.rfile.read(int(self.headers.getheader('Content-Length')))
+        # For debug:
+        #print content
+        
+        hexdigest = hmac.new(SECRET, msg=content, digestmod=hashlib.sha1).hexdigest()
+        log("Computed signature: %s." % hexdigest)
+        
         # Authenticate the message
-        if githubSignature == SIGNATURE:
+        if githubSignature == "sha1=" + hexdigest:
             log("Authentication success.")
             
             if githubEvent == "push":
-                content = self.rfile.read(int(self.headers.getheader('Content-Length')))
-                
-                # For debug:
-                #print content
-                
                 parsed_json = json.loads(content)
                 log("Repository %s was updated by %s." % (parsed_json["repository"]["name"], parsed_json["pusher"]["name"]))
                 
