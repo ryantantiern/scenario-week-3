@@ -9,10 +9,10 @@ python -m pip install django psycopg2
 
 # Update Apache conf to support Django
 DJANGO_CONF=\
-"WSGIScriptAlias / /home/ec2-user/strange-references/strange_references_project/wsgi.py
-WSGIDaemonProcess strange-references python-path=/home/ec2-user/strange-references:/usr/local/lib/python2.7/site-packages
+"WSGIScriptAlias / /home/ec2-user/s-ref/strange-references/strange_references_project/wsgi.py
+WSGIDaemonProcess strange-references python-path=/home/ec2-user/s-ref/strange-references:/usr/local/lib/python2.7/site-packages
 WSGIProcessGroup strange-references
-<Directory /home/ec2-user/strange-references/strange_references_project>
+<Directory /home/ec2-user/s-ref/strange-references/strange_references_project>
 <Files wsgi.py>
 Require all granted
 </Files>
@@ -21,7 +21,12 @@ Require all granted
 printf "$DJANGO_CONF" > /etc/httpd/conf.d/django.conf
 
 # Pull all deployment scripts from Github and run deploy.sh
-cd /home/ec2-user
+cd /home/ec2-user/
+mkdir /home/ec2-user/s-ref/
+chmod 755 /home/ec2-user/s-ref
+chmod 755 .
+cd /home/ec2-user/s-ref
+
 curl -L -u ryantantiern:b9501e841e0c37fe7a56c96cfedef07938ece540 \
 https://github.com/ryantantiern/scenario-week-3/archive/deployment-scripts-ray.zip \
 > deployment-scripts.zip
@@ -31,13 +36,11 @@ mv scenario-week-3-deployment-scripts-ray/ deployment-scripts/
 
 chmod 755 `find . -type d`
 chmod 644 `find . -type f`
-chmod -R +xr *
-chown -R ec2-user /home/ec2-user
 
-cd /home/ec2-user/deployment-scripts
-source instance-starter-script/deploy.sh 2>&1 | tee /home/ec2-user/deploy_log.txt
-cd /home/ec2-user/deployment-scripts
+cd /home/ec2-user/s-ref/deployment-scripts
+source instance-starter-script/deploy.sh 2>&1 | tee /home/ec2-user/s-ref/deploy_log.txt
+cd /home/ec2-user/s-ref/deployment-scripts
 
 # Put startup script into startup list and run once.
-printf '\nsource /home/ec2-user/deployment-scripts/instance-starter-script/startup.sh 2>&1 | tee /home/ec2-user/startup_log.txt\n' >> /etc/rc.local
+printf '\nsource /home/ec2-user/s-ref/deployment-scripts/instance-starter-script/startup.sh 2>&1 | tee /home/ec2-user/startup_log.txt\n' >> /etc/rc.local
 source instance-starter-script/startup.sh 2>&1 | tee /home/ec2-user/startup_log.txt
