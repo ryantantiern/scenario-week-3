@@ -75,3 +75,15 @@ label_cmd = 'aws ec2 create-tags --resources ' + instanceID + \
 result = subprocess.check_output(label_cmd, shell = True)
 
 print("EC2 instance launched.")
+
+# ---- RDS INSTANCE ----
+# Set to true to launch RDS instance.
+if False:
+    print("Launching RDS instance...")
+    create_rds_cmd = 'aws rds create-db-instance --db-instance-identifier strangedbinstance --allocated-storage 20 --db-instance-class db.t2.micro --engine postgres --master-username strangeuser --master-user-password strange1'
+
+    try:
+        create_rds_result = subprocess.check_output(create_rds_cmd, shell = True)
+        print("RDS instance launched.")
+    except:
+        print("RDS instance failed to launch.")
