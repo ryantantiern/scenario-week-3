@@ -23,7 +23,6 @@ sed -i "s/DEBUG = True/DEBUG = False/g" /home/ec2-user/strange-references/strang
 NEW_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
 sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /home/ec2-user/strange-references/strange_references_project/settings.py
 
-python /home/ec2-user/webhook.py
 service httpd start
 
 # 04. Setup GitHub webhook
