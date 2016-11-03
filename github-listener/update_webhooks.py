@@ -38,9 +38,7 @@ def log(message):
 # If running on VM, get public hostname (DNS) from instance metadata.
 log("Contacting AWS...")
 try:
-    hostname_req = urllib2.Request(AWS_HOSTNAME_ENDPOINT)
-    hostname_response = urllib2.urlopen(hostname_req).read()
-    public_dns_str = hostname_response
+    public_dns_str = urllib2.urlopen(AWS_HOSTNAME_ENDPOINT).read()
 except:
     # Instance metadata not available - we're not running on the VM. Query AWS CLI to retrieve current AWS public DNS address.
     AWS_GET_PUBLICDNS = 'aws ec2 describe-instances --filters "Name=instance-state-name,Values=running,Name=tag:Name,Values=%s" --query "Reservations[].Instances[].PublicDnsName"' % AWS_INSTANCE_NAME
