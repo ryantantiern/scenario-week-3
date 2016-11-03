@@ -56,7 +56,7 @@ class requestHandler(BaseHTTPRequestHandler):
                 
                 # Execute deployment script
                 try:
-                    returnvalue = subprocess.call([DEPLOYMENT_SCRIPT_LOCATION])
+                    returnvalue = subprocess.call(DEPLOYMENT_SCRIPT_LOCATION)
                 except:
                     log("WARNING: Deployment script could not be found or failed to run.")
                 
