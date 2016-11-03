@@ -31,7 +31,7 @@ def generate_auth(request):
     request.add_header("Authorization", "Basic %s" % base64string)
     
 def log(message):
-    print "[%s] %s" % (time.ctime(), message)
+    print("[%s] %s" % (time.ctime(), message))
     
 # Contact AWS to get hostname.
 # Result stored in var public_dns_str.
