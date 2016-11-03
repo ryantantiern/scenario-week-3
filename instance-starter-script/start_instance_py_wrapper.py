@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # This script launches EC2 instances, creating a security group if not already present.
 # This script optionally accepts three arguments:
+# Argument 1: DEPLOYMENT_MODE - "staging" / "production"
 # Argument 1: KEY_NAME
 # Argument 2: INSTANCE_NAME
 # Argument 3: IMAGE_ID
@@ -13,21 +14,25 @@ import sys
 # Set KEY_NAME, SECURITY_GROUP_ID as needed for the AWS account.
 KEY_NAME = "server1keypair"
 INSTANCE_NAME = "StrangeProd"
+DEPLOYMENT_MODE = "production"
 
 # These constants should be fixed.
 IMAGE_ID = "ami-5ec1673e"
 SECURITY_GROUP_NAME = "strange-security-group"
 
 # Get command line arguments
+# Argument 1: DEPLOYMENT_MODE - "staging" / "production"
 # Argument 1: KEY_NAME
 # Argument 2: INSTANCE_NAME
 # Argument 3: IMAGE_ID
 if len(sys.argv[1:]) > 0:
-    KEY_NAME = sys.argv[1:][0]
+    DEPLOYMENT_MODE = sys.argv[1:][0]
 if len(sys.argv[1:]) > 1:
-    INSTANCE_NAME = sys.argv[1:][1]
+    KEY_NAME = sys.argv[1:][1]
 if len(sys.argv[1:]) > 2:
-    IMAGE_ID = sys.argv[1:][2]
+    INSTANCE_NAME = sys.argv[1:][2]
+if len(sys.argv[1:]) > 3:
+    IMAGE_ID = sys.argv[1:][3]
 
 # ---- SECURITY GROUP ----
     
@@ -58,9 +63,12 @@ else:
 
 # Launch instance
 print("Launching EC2 instance...")
+init_script = "file://init_instance.sh"
+if DEPLOYMENT_MODE == "staging":
+    init_script = "file://init_instance_staging.sh"
 start_cmd = "aws ec2 run-instances --image-id %s --count 1" % IMAGE_ID + \
 	" --instance-type t2.micro --key-name %s" % KEY_NAME + \
-	" --security-group-ids %s --user-data file://init_instance.sh" % security_group_id
+	" --security-group-ids %s --user-data %s" % (security_group_id, init_script)
     
 result = subprocess.check_output(start_cmd, shell = True)
 parsed_json = json.loads(result)

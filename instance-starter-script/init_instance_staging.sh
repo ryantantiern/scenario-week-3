@@ -12,12 +12,6 @@ DJANGO_CONF=\
 "WSGIScriptAlias / /home/ec2-user/s-ref/strange-references/strange_references_project/wsgi.py
 WSGIDaemonProcess strange-references python-path=/home/ec2-user/s-ref/strange-references:/usr/local/lib/python2.7/site-packages
 WSGIProcessGroup strange-references
-
-Alias /static/ /var/www/html/static/
-<Directory /var/www/html/static/>
-Require all granted
-</Directory>
-
 <Directory /home/ec2-user/s-ref/strange-references/strange_references_project>
 <Files wsgi.py>
 Require all granted
@@ -34,7 +28,7 @@ chmod 755 .
 # Set environment variable
 cat > /etc/profile.d/strange-vars.sh << 'EOT2'
 #!/bin/bash
-export DEPLOY_TYPE="production"
+export DEPLOY_TYPE="staging"
 EOT2
 chmod +x /etc/profile.d/strange-vars.sh
 source /etc/profile.d/strange-vars.sh
@@ -78,7 +72,6 @@ chown -R apache /home/ec2-user/s-ref/strange-references/
 NEW_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
 sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /home/ec2-user/s-ref/strange-references/strange_references_project/settings.py
 
-python /home/ec2-user/s-ref/strange-references/manage.py collectstatic --no-input
 EOT0
 
 chmod a+x /home/ec2-user/s-ref/deploy.sh
