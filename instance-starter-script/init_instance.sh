@@ -9,10 +9,10 @@ python -m pip install django psycopg2
 
 # Update Apache conf to support Django
 DJANGO_CONF=\
-"WSGIScriptAlias / /home/ec2-user/strange-references/strange_references_project/wsgi.py
-WSGIDaemonProcess strange-references python-path=/home/ec2-user/strange-references:/usr/local/lib/python2.7/site-packages
+"WSGIScriptAlias / /home/ec2-user/s-ref/strange-references/strange_references_project/wsgi.py
+WSGIDaemonProcess strange-references python-path=/home/ec2-user/s-ref/strange-references:/usr/local/lib/python2.7/site-packages
 WSGIProcessGroup strange-references
-<Directory /home/ec2-user/strange-references/strange_references_project>
+<Directory /home/ec2-user/s-ref/strange-references/strange_references_project>
 <Files wsgi.py>
 Require all granted
 </Files>
@@ -20,11 +20,17 @@ Require all granted
 
 printf "$DJANGO_CONF" > /etc/httpd/conf.d/django.conf
 
-# Make deploy script and run it
-cat > /home/ec2-user/deploy.sh << 'EOT0'
-#!/bin/bash
 cd /home/ec2-user/
-rm -rf strange-references*
+mkdir /home/ec2-user/s-ref/
+chmod 755 /home/ec2-user/s-ref
+chmod 755 .
+
+# Make deploy script and run it
+cat > /home/ec2-user/s-ref/deploy.sh << 'EOT0'
+#!/bin/bash
+cd /home/ec2-user/s-ref/
+rm -rf strange-references
+
 curl -L -u blzq-mu:3669b531d5d5ae756280723fd071e0a1640db581 \
 https://github.com/ryantantiern/strange-references/archive/hooklistener.zip \
 > strange-references.zip
@@ -32,23 +38,24 @@ unzip strange-references.zip
 rm strange-references.zip
 mv strange-references-hooklistener/ strange-references/
 
-cd /home/ec2-user/strange-references/
+cd /home/ec2-user/s-ref/strange-references/
 chmod 755 `find . -type d`
 chmod 644 `find . -type f`
-cd /home/ec2-user/
-chmod 755 strange-references
-chmod 755 .
+cd /home/ec2-user/s-ref/
+chown -R apache /home/ec2-user/s-ref/strange-references/
 EOT0
 
-chmod a+x /home/ec2-user/deploy.sh
-source /home/ec2-user/deploy.sh
+chmod a+x /home/ec2-user/s-ref/deploy.sh
+source /home/ec2-user/s-ref/deploy.sh
+chown apache /home/ec2-user/s-ref/deploy.sh
+chown -R apache /home/ec2-user/s-ref/
 
 # Update DEBUG setting in settings.py
-sed -i "s/DEBUG = True/DEBUG = False/g" /home/ec2-user/strange-references/strange_references_project/settings.py
+sed -i "s/DEBUG = True/DEBUG = False/g" /home/ec2-user/s-ref/strange-references/strange_references_project/settings.py
 
 
 # Make Python script for GitHub webhook
-cat > /home/ec2-user/webhook.py << 'EOT1'
+cat > /home/ec2-user/s-ref/webhook.py << 'EOT1'
 #!/usr/bin/env python
 # This script retrieves the current AWS public DNS address via the AWS CLI and communicates with GitHub to set up webhooks.
 import subprocess
@@ -126,20 +133,18 @@ EOT1
 
 
 # Add startup script to update dns, update webhook, and start apache
-cat > /home/ec2-user/boot.sh << 'EOT2'
+cat > /home/ec2-user/s-ref/boot.sh << 'EOT2'
 #!/bin/bash
 NEW_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
-sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /home/ec2-user/strange-references/strange_references_project/settings.py
-
-python /home/ec2-user/webhook.py
+sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /home/ec2-user/s-ref/strange-references/strange_references_project/settings.py
+python /home/ec2-user/s-ref/webhook.py
 service httpd start
 EOT2
-chmod +x /home/ec2-user/boot.sh
+chmod +x /home/ec2-user/s-ref/boot.sh
 
-printf '\nsource /home/ec2-user/boot.sh\n' >> /etc/rc.local
-source /home/ec2-user/boot.sh
+printf '\nsource /home/ec2-user/s-ref/boot.sh\n' >> /etc/rc.local
+source /home/ec2-user/s-ref/boot.sh
 
-chown -R ec2-user /home/ec2-user
 
 
 
