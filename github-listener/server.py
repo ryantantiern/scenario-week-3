@@ -10,7 +10,7 @@ import hmac, hashlib
 # Config
 PORT_NUMBER = 8080
 SECRET = "strange1"
-DEPLOYMENT_SCRIPT_LOCATION = "~/strange-references/deploy.sh"
+DEPLOYMENT_SCRIPT_LOCATION = "/home/ec2-user/deployment-scripts/instance-starter-script/deploy.sh"
 
 class requestHandler(BaseHTTPRequestHandler):
     
