@@ -12,6 +12,8 @@ mv strange-references-hooklistener/ strange-references/
 
 chmod 755 `find . -type d`
 chmod 644 `find . -type f`
+chmod 755 /home/ec2-user/s-ref
+chmod 755 .
 chown -R apache /home/ec2-user/s-ref/
 
 # Update DEBUG setting in settings.py
