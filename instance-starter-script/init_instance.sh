@@ -25,15 +25,16 @@ cat > /home/ec2-user/deploy.sh << 'EOT0'
 #!/bin/bash
 cd /home/ec2-user
 curl -L -u blzq-mu:3669b531d5d5ae756280723fd071e0a1640db581 \
-https://github.com/ryantantiern/strange-references/archive/master.zip \
+https://github.com/ryantantiern/strange-references/archive/hooklistener.zip \
 > strange-references.zip
 unzip strange-references.zip
 rm strange-references.zip
-mv strange-references-master/ strange-references/
+mv strange-references-hooklistener/ strange-references/
 
 chmod 755 `find . -type d`
 chmod 644 `find . -type f`
 EOT0
+
 chmod +x /home/ec2-user/deploy.sh
 
 source /home/ec2-user/deploy.sh
@@ -45,7 +46,7 @@ sed -i "s/DEBUG = True/DEBUG = False/g" /home/ec2-user/strange-references/strang
 
 # Make Python script for GitHub webhook
 cat > /home/ec2-user/webhook.py << 'EOT1'
-#!/usr/bin/python
+#!/usr/bin/env python
 # This script retrieves the current AWS public DNS address via the AWS CLI and communicates with GitHub to set up webhooks.
 import subprocess
 import json
@@ -68,7 +69,7 @@ def generate_auth(request):
     request.add_header("Authorization", "Basic %s" % base64string)
 
 # Get public dns
-public_dns_str = urllib2.urlopen("http://169.254.169.254/latest/meta-data/public-hostname")
+public_dns_str = urllib2.urlopen("http://169.254.169.254/latest/meta-data/public-hostname").read()
 
 # Get list of existing hooks
 req = urllib2.Request(GITHUB_WEBHOOKS_API)
@@ -127,7 +128,7 @@ cat > /home/ec2-user/boot.sh << 'EOT2'
 NEW_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
 sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /home/ec2-user/strange-references/strange_references_project/settings.py
 
-source /home/ec2-user/webhook.py
+python /home/ec2-user/webhook.py
 service httpd start
 EOT2
 chmod +x /home/ec2-user/boot.sh
