@@ -23,7 +23,8 @@ printf "$DJANGO_CONF" > /etc/httpd/conf.d/django.conf
 # Make deploy script and run it
 cat > /home/ec2-user/deploy.sh << 'EOT0'
 #!/bin/bash
-cd /home/ec2-user
+cd /home/ec2-user/
+rm -rf strange-references*
 curl -L -u blzq-mu:3669b531d5d5ae756280723fd071e0a1640db581 \
 https://github.com/ryantantiern/strange-references/archive/hooklistener.zip \
 > strange-references.zip
@@ -31,14 +32,16 @@ unzip strange-references.zip
 rm strange-references.zip
 mv strange-references-hooklistener/ strange-references/
 
+cd /home/ec2-user/strange-references/
 chmod 755 `find . -type d`
 chmod 644 `find . -type f`
+cd /home/ec2-user/
+chmod 755 strange-references
+chmod 755 .
 EOT0
 
-chmod +x /home/ec2-user/deploy.sh
-
+chmod a+x /home/ec2-user/deploy.sh
 source /home/ec2-user/deploy.sh
-
 
 # Update DEBUG setting in settings.py
 sed -i "s/DEBUG = True/DEBUG = False/g" /home/ec2-user/strange-references/strange_references_project/settings.py
@@ -104,7 +107,7 @@ params = {
         "push"
     ],
     "config": {
-        "url": public_dns_str + LISTENER_LOCATION,
+        "url": "http://" + public_dns_str + LISTENER_LOCATION,
         "content_type": "json",
         "secret": WEBHOOK_SECRET
     }
@@ -135,6 +138,8 @@ chmod +x /home/ec2-user/boot.sh
 
 printf '\nsource /home/ec2-user/boot.sh\n' >> /etc/rc.local
 source /home/ec2-user/boot.sh
+
+chown -R ec2-user /home/ec2-user
 
 
 
