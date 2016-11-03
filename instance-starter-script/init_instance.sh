@@ -31,33 +31,13 @@ mv scenario-week-3-deployment-scripts-ray/ deployment-scripts/
 
 chmod 755 `find . -type d`
 chmod 644 `find . -type f`
+chmod -R +xr *
+chown -R ec2-user /home/ec2-user
 
 cd /home/ec2-user/deployment-scripts
+source instance-starter-script/deploy.sh 2>&1 | tee /home/ec2-user/deploy_log.txt
+cd /home/ec2-user/deployment-scripts
 
-source instance-starter-script/deploy.sh
-
-# Make Python script for GitHub webhook
-source github-listener/update_webhooks.py
-source github-listener/server.py
-
-
-# Add startup script to update dns, update webhook, and start apache
-cat > /home/ec2-user/boot.sh << 'EOT2'
-#!/bin/bash
-NEW_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
-sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /home/ec2-user/strange-references/strange_references_project/settings.py
-
-python /home/ec2-user/webhook.py
-service httpd start
-EOT2
-chmod +x /home/ec2-user/boot.sh
-
-printf '\nsource /home/ec2-user/boot.sh\n' >> /etc/rc.local
-source /home/ec2-user/boot.sh
-
-
-
-
-
-
-
+# Put startup script into startup list and run once.
+printf '\nsource /home/ec2-user/deployment-scripts/instance-starter-script/startup.sh 2>&1 | tee /home/ec2-user/startup_log.txt\n' >> /etc/rc.local
+source instance-starter-script/startup.sh 2>&1 | tee /home/ec2-user/startup_log.txt
