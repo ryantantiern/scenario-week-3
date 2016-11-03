@@ -15,4 +15,4 @@ chmod 644 `find . -type f`
 chown -R apache /home/ec2-user/s-ref/
 
 # Update DEBUG setting in settings.py
-sed -i "s/DEBUG = True/DEBUG = False/g" /home/ec2-user/strange-references/strange_references_project/settings.py
+sed -i "s/DEBUG = True/DEBUG = False/g" /home/ec2-user/s-ref/strange-references/strange_references_project/settings.py
