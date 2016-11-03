@@ -11,4 +11,4 @@ service httpd start
 python /home/ec2-user/deployment-scripts/github-listener/update_webhooks.py
 
 # 03. Start GitHub listener (comment out if using django implementation)
-python /home/ec2-user/deployment-scripts/github-listener/server.py
+python /home/ec2-user/deployment-scripts/github-listener/server.py &
