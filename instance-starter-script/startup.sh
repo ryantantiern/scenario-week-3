@@ -8,7 +8,7 @@ sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /hom
 service httpd start
 
 # 02. Setup GitHub webhook
-python /home/ec2-user/deployment-scripts/github-listener/update_webhooks.py
+python /home/ec2-user/deployment-scripts/github-listener/update_webhooks.py 2>&1 | tee /home/ec2-user/webhook_log.txt
 
 # 03. Start GitHub listener (comment out if using django implementation)
 python /home/ec2-user/deployment-scripts/github-listener/server.py &
