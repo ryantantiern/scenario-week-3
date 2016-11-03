@@ -31,13 +31,11 @@ mkdir /home/ec2-user/s-ref/
 chmod 755 /home/ec2-user/s-ref
 chmod 755 .
 
-# Set environment variable
-cat > /etc/profile.d/strange-vars.sh << 'EOT2'
-#!/bin/bash
-export DEPLOY_TYPE="production"
+# Set deploy mode
+cat > /home/ec2-user/s-ref/deploy_type.env << 'EOT2'
+production
 EOT2
-chmod +x /etc/profile.d/strange-vars.sh
-source /etc/profile.d/strange-vars.sh
+chmod a+r /home/ec2-user/s-ref/deploy_type.env
 
 # Make deploy script and run it
 cat > /home/ec2-user/s-ref/deploy.sh << 'EOT0'
@@ -45,29 +43,15 @@ cat > /home/ec2-user/s-ref/deploy.sh << 'EOT0'
 cd /home/ec2-user/s-ref/
 rm -rf strange-references
 
-if [ "$DEPLOY_TYPE" == "production" ]
-then
 echo "--- IN PRODUCTION ---"
 curl -L -u blzq-mu:3669b531d5d5ae756280723fd071e0a1640db581 \
 https://github.com/ryantantiern/strange-references/archive/master.zip \
 > strange-references.zip
-else
-echo "--- IN STAGING ---"
-curl -L -u blzq-mu:3669b531d5d5ae756280723fd071e0a1640db581 \
-https://github.com/ryantantiern/strange-references/archive/staging.zip \
-> strange-references.zip
-fi
 
 
 unzip strange-references.zip
 rm strange-references.zip
-
-if [ "$DEPLOY_TYPE" == "production" ]
-then
 mv strange-references-master/ strange-references/
-else
-mv strange-references-staging/ strange-references/
-fi
 
 cd /home/ec2-user/s-ref/strange-references/
 chmod 755 `find . -type d`
@@ -107,7 +91,7 @@ GITHUB_REPO = "strange-references"
 WEBHOOK_SECRET = "strange1"
 LISTENER_LOCATION = "/hook"
 GITHUB_WEBHOOKS_API = "https://api.github.com/repos/%s/%s/hooks" % (GITHUB_USERNAME, GITHUB_REPO)
-REMOVE_ALL_EXISTING_WEBHOOKS = True
+REMOVE_ALL_EXISTING_WEBHOOKS = False
 
 # Utility Functions
 def generate_auth(request):
