@@ -43,6 +43,10 @@ chmod 755 `find . -type d`
 chmod 644 `find . -type f`
 cd /home/ec2-user/s-ref/
 chown -R apache /home/ec2-user/s-ref/strange-references/
+
+NEW_PUBLIC_DNS=$(curl -s http://169.254.169.254/latest/meta-data/public-hostname)
+sed -i "s/ALLOWED_HOSTS = \[.*\]/ALLOWED_HOSTS = \[ '$NEW_PUBLIC_DNS' \]/g" /home/ec2-user/s-ref/strange-references/strange_references_project/settings.py
+
 EOT0
 
 chmod a+x /home/ec2-user/s-ref/deploy.sh
