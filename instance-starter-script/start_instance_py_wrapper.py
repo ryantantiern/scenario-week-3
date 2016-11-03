@@ -63,9 +63,11 @@ else:
 
 # Launch instance
 print("Launching EC2 instance...")
-init_script = "file://init_instance.sh"
 if DEPLOYMENT_MODE == "staging":
     init_script = "file://init_instance_staging.sh"
+else:
+    init_script = "file://init_instance.sh"
+
 start_cmd = "aws ec2 run-instances --image-id %s --count 1" % IMAGE_ID + \
 	" --instance-type t2.micro --key-name %s" % KEY_NAME + \
 	" --security-group-ids %s --user-data %s" % (security_group_id, init_script)
