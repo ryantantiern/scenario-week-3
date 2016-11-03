@@ -1,0 +1,5 @@
+SHELL=/bin/bash
+PATH=/usr/bin
+*/15 * * * * ec2-user /home/ec2-user/backup_scripts/backupdb.sh 
+*/15 * * * * ec2-user /home/ec2-user/backup_scripts/del_oldest.sh
+
