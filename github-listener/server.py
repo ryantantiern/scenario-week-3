@@ -76,7 +76,13 @@ class requestHandler(BaseHTTPRequestHandler):
         return
     
 def log(message):
-    print "[%s] %s" % (time.ctime(), message)
+    print("[%s] %s" % (time.ctime(), message))
+    # Write to logfile
+    try:
+        with open('/home/ec2-user/githublistener_log.txt', 'a') as file:
+            file.write("[%s] %s\n" % (time.ctime(), message))
+    except:
+        pass
         
 try:
     server = HTTPServer(('', PORT_NUMBER), requestHandler)
