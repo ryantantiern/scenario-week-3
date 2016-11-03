@@ -7,13 +7,22 @@ import time
 import urllib2, base64
 
 # Config
-AWS_INSTANCE_NAME = "ScenarioStaging"
+
+# Github Config
 GITHUB_TOKEN = "b9501e841e0c37fe7a56c96cfedef07938ece540"
 GITHUB_USERNAME = "ryantantiern"
 GITHUB_REPO = "strange-references"
 WEBHOOK_SECRET = "strange1"
-LISTENER_LOCATION = ":8080"
 GITHUB_WEBHOOKS_API = "https://api.github.com/repos/%s/%s/hooks" % (GITHUB_USERNAME, GITHUB_REPO)
+
+# AWS Config
+AWS_INSTANCE_NAME = "ScenarioStaging"
+AWS_HOSTNAME_ENDPOINT = "http://169.254.169.254/latest/meta-data/public-hostname"
+
+# Github-Listener Config
+LISTENER_LOCATION = ":8080"  # The location where github-listener is running. Port 8080.
+
+# Preferences
 REMOVE_ALL_EXISTING_WEBHOOKS = True
 
 # Utility Functions
@@ -23,18 +32,23 @@ def generate_auth(request):
     
 def log(message):
     print "[%s] %s" % (time.ctime(), message)
-
-# Call AWS CLI to retrieve current AWS public DNS address.
-# Result stored in public_dns_str.
+    
+# Contact AWS to get hostname.
+# Result stored in var public_dns_str.
+# If running on VM, get public hostname (DNS) from instance metadata.
 log("Contacting AWS...")
-AWS_GET_PUBLICDNS = 'aws ec2 describe-instances --filters "Name=instance-state-name,Values=running,Name=tag:Name,Values=%s" --query "Reservations[].Instances[].PublicDnsName"' % AWS_INSTANCE_NAME
+try:
+    hostname_req = urllib2.Request(AWS_HOSTNAME_ENDPOINT)
+    hostname_response = urllib2.urlopen(hostname_req).read()
+    public_dns_str = hostname_response
+except:
+    # Instance metadata not available - we're not running on the VM. Query AWS CLI to retrieve current AWS public DNS address.
+    AWS_GET_PUBLICDNS = 'aws ec2 describe-instances --filters "Name=instance-state-name,Values=running,Name=tag:Name,Values=%s" --query "Reservations[].Instances[].PublicDnsName"' % AWS_INSTANCE_NAME
 
-aws_instances_result = subprocess.check_output(AWS_GET_PUBLICDNS, shell = True)
-parsed_json = json.loads(aws_instances_result)
-public_dns_str = parsed_json[0]
+    aws_instances_result = subprocess.check_output(AWS_GET_PUBLICDNS, shell = True)
+    parsed_json = json.loads(aws_instances_result)
+    public_dns_str = parsed_json[0]
 
-# For debug:
-#print aws_instances_result
 log("DNS entry retrieved: %s." % public_dns_str)
 
 # Connect to Github API
